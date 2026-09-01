@@ -23,11 +23,11 @@ export default function Footer() {
           </div>
           <div className="footer-col footer-services">
             <h4>Services</h4>
-            <p href="/services/wordpress-development">WordPress Development</p>
-            <p href="/services/custom-plugin-development">Plugin Development</p>
-            <p href="/services/woocommerce-development">WooCommerce</p>
-            <p href="/services/react-nextjs-development">React / Next.js</p>
-            <p href="/services/seo-performance">SEO &amp; Performance</p>
+            <p >WordPress Development</p>
+            <p >Plugin Development</p>
+            <p >WooCommerce</p>
+            <p>React / Next.js</p>
+            <p>SEO &amp; Performance</p>
           </div>
         </div>
         <div className="footer-bottom">

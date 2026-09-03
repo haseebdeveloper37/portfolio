@@ -62,16 +62,16 @@ export default function Contact() {
           <div className="row2">
             <div className="field">
               <label htmlFor="fname">Name</label>
-              <input id="fname" type="text" placeholder="Your name" />
+              <input id="fname" name="name" type="text" placeholder="Your name" />
             </div>
             <div className="field">
               <label htmlFor="femail">Email</label>
-              <input id="femail" type="email" placeholder="you@company.com" />
+              <input id="femail" name="email" type="email" placeholder="you@company.com" />
             </div>
           </div>
           <div className="field">
             <label htmlFor="ftype">Project Type</label>
-            <select id="ftype">
+            <select id="ftype" name="projectType">
               <option>WordPress Development</option>
               <option>Custom Plugin</option>
               <option>WooCommerce Store</option>
@@ -83,7 +83,7 @@ export default function Contact() {
 
           <div className="field">
             <label htmlFor="fmsg">Message</label>
-            <textarea id="fmsg" rows={5} placeholder="What are you building?"></textarea>
+            <textarea id="fmsg" name="message" rows={5} placeholder="What are you building?"></textarea>
           </div>
           <button className="btn btn-primary" type="submit" style={{ marginTop: "6px" }}>
             Send Message

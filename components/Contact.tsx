@@ -1,8 +1,20 @@
 "use client";
 
+import Script from "next/script";
 import { useState } from "react";
 
 type Status = "idle" | "loading" | "success" | "error";
+
+declare global {
+  interface Window {
+    grecaptcha?: {
+      ready: (callback: () => void) => void;
+      execute: (siteKey: string, options: { action: string }) => Promise<string>;
+    };
+  }
+}
+
+const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 
 export default function Contact() {
 
@@ -16,11 +28,34 @@ export default function Contact() {
 
     const form = e.currentTarget;
     const formData = new FormData(form);
+
+    if (!RECAPTCHA_SITE_KEY || !window.grecaptcha) {
+      setStatus("error");
+      setErrorMsg("Security verification is unavailable. Please try again later.");
+      return;
+    }
+
+    const recaptchaToken = await new Promise<string>((resolve, reject) => {
+      window.grecaptcha?.ready(() => {
+        window.grecaptcha
+          ?.execute(RECAPTCHA_SITE_KEY, { action: "contact_submit" })
+          .then(resolve)
+          .catch(reject);
+      });
+    }).catch(() => "");
+
+    if (!recaptchaToken) {
+      setStatus("error");
+      setErrorMsg("Security verification failed. Please try again.");
+      return;
+    }
+
     const payload = {
       name: formData.get("name") as string,
       email: formData.get("email") as string,
       projectType: formData.get("projectType") as string,
       message: formData.get("message") as string,
+      recaptchaToken,
     };
 
     try {
@@ -85,9 +120,24 @@ export default function Contact() {
             <label htmlFor="fmsg">Message</label>
             <textarea id="fmsg" name="message" rows={5} placeholder="What are you building?"></textarea>
           </div>
-          <button className="btn btn-primary" type="submit" style={{ marginTop: "6px" }}>
+          <button
+            className="btn btn-primary"
+            type="submit"
+            disabled={status === "loading"}
+            style={{ marginTop: "6px" }}
+          >
             Send Message
           </button>
+          {status === "success" && (
+            <p role="status" style={{ marginTop: "14px", color: "var(--text-secondary)" }}>
+              Your form has been submitted. We will get back to you soon.
+            </p>
+          )}
+          {status === "error" && (
+            <p role="alert" style={{ marginTop: "14px", color: "#b42318" }}>
+              {errorMsg}
+            </p>
+          )}
         </form>
 
         <div className="reveal contact-info" style={{ transitionDelay: ".1s" }}>
@@ -149,6 +199,10 @@ export default function Contact() {
 </div>
         </div>
       </div>
+      <Script
+        src={`https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY || "explicit"}`}
+        strategy="afterInteractive"
+      />
     </section>
   );
 }

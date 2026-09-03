@@ -12,17 +12,56 @@ const FROM_EMAIL = process.env.CONTACT_FROM_EMAIL || "Portfolio Contact <onboard
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, email, projectType, message } = body as {
+    const { name, email, projectType, message, recaptchaToken } = body as {
       name?: string;
       email?: string;
       projectType?: string;
       message?: string;
+      recaptchaToken?: string;
     };
 
-    if (!name || !email || !message) {
+    if (!name || !email || !message || !recaptchaToken) {
       return NextResponse.json(
-        { error: "Name, email and message are required." },
+        { error: "Name, email, message and security verification are required." },
         { status: 400 }
+      );
+    }
+
+    const recaptchaSecret = process.env.RECAPTCHA_SECRET_KEY;
+    if (!recaptchaSecret) {
+      console.error("RECAPTCHA_SECRET_KEY is not configured.");
+      return NextResponse.json(
+        { error: "Security verification is not configured." },
+        { status: 500 }
+      );
+    }
+
+    const verificationResponse = await fetch(
+      "https://www.google.com/recaptcha/api/siteverify",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          secret: recaptchaSecret,
+          response: recaptchaToken,
+        }),
+        cache: "no-store",
+      }
+    );
+    const verification = (await verificationResponse.json()) as {
+      success?: boolean;
+      score?: number;
+      action?: string;
+    };
+
+    if (
+      !verification.success ||
+      (verification.score ?? 0) < 0.5 ||
+      verification.action !== "contact_submit"
+    ) {
+      return NextResponse.json(
+        { error: "Security verification failed. Please try again." },
+        { status: 403 }
       );
     }
 

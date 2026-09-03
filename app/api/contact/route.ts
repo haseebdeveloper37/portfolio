@@ -52,13 +52,30 @@ export async function POST(req: NextRequest) {
       success?: boolean;
       score?: number;
       action?: string;
+      hostname?: string;
+      "error-codes"?: string[];
     };
+
+    const requestHostname = req.headers.get("host")?.split(":")[0];
+    const hostnameMatches =
+      !verification.hostname ||
+      verification.hostname === requestHostname ||
+      verification.hostname === "localhost";
 
     if (
       !verification.success ||
       (verification.score ?? 0) < 0.5 ||
-      verification.action !== "contact_submit"
+      verification.action !== "contact_submit" ||
+      !hostnameMatches
     ) {
+      console.error("reCAPTCHA verification failed", {
+        success: verification.success,
+        score: verification.score,
+        action: verification.action,
+        hostname: verification.hostname,
+        requestHostname,
+        errorCodes: verification["error-codes"],
+      });
       return NextResponse.json(
         { error: "Security verification failed. Please try again." },
         { status: 403 }
